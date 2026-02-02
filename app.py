@@ -217,7 +217,7 @@ def init_db():
     except Exception as e:
         print(f"Database update skipped (possibly read-only): {e}")
 
-init_db()
+# init_db() # Disabled for Vercel to avoid startup crashes
 
 # Login Decorator
 def login_required(f):
@@ -282,6 +282,10 @@ def view_response(response_id):
     stress_level = _stress_label(row['job_stress_score'])
 
     return render_template('response_detail.html', res=row, raw_answers=raw_answers, stress_level=stress_level, questions=QUESTIONS)
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok", "db": os.path.exists(DB_NAME)})
 
 @app.route('/')
 def index():
