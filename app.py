@@ -9,7 +9,23 @@ from functools import wraps
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_viva_project'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_NAME = os.path.join(BASE_DIR, 'database.db')
+# On Vercel, use /tmp for the database to ensure it's writable
+if os.environ.get('VERCEL'):
+    DB_NAME = '/tmp/database.db'
+    # Copy the database from BASE_DIR to /tmp if it doesn't exist (only once per instance)
+    if not os.path.exists(DB_NAME):
+        import shutil
+        SOURCE_DB = os.path.join(BASE_DIR, 'database.db')
+        if os.path.exists(SOURCE_DB):
+            try:
+                shutil.copy2(SOURCE_DB, DB_NAME)
+                print(f"Database copied to {DB_NAME}")
+            except Exception as e:
+                print(f"Error copying database: {e}")
+        else:
+            print(f"Source database not found at {SOURCE_DB}")
+else:
+    DB_NAME = os.path.join(BASE_DIR, 'database.db')
 
 # Load Models
 MODEL_LR_PATH = os.path.join(BASE_DIR, 'model_lr.pkl')
@@ -125,9 +141,13 @@ ROLE_QUESTIONS = {
 
 # Database Helper
 def get_db():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        conn.row_factory = sqlite3.Row
+        return conn
+    except Exception as e:
+        print(f"Error connecting to database {DB_NAME}: {e}")
+        raise e
 
 def init_db():
     try:
