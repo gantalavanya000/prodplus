@@ -8,15 +8,16 @@ from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_viva_project'
-DB_NAME = 'database.db'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = os.path.join(BASE_DIR, 'database.db')
 
 # Load Models
-MODEL_LR_PATH = 'model_lr.pkl'
-MODEL_RF_PATH = 'model_rf.pkl'
-MODEL_GB_PATH = 'model_gb.pkl'
-MODEL_LOG_PATH = 'model_log.pkl'
-SCALER_PATH = 'scaler.pkl'
-THRESHOLD_PATH = 'threshold.txt'
+MODEL_LR_PATH = os.path.join(BASE_DIR, 'model_lr.pkl')
+MODEL_RF_PATH = os.path.join(BASE_DIR, 'model_rf.pkl')
+MODEL_GB_PATH = os.path.join(BASE_DIR, 'model_gb.pkl')
+MODEL_LOG_PATH = os.path.join(BASE_DIR, 'model_log.pkl')
+SCALER_PATH = os.path.join(BASE_DIR, 'scaler.pkl')
+THRESHOLD_PATH = os.path.join(BASE_DIR, 'threshold.txt')
 
 model_lr = None
 model_rf = None
@@ -129,88 +130,92 @@ def get_db():
     return conn
 
 def init_db():
-    conn = get_db()
-    c = conn.cursor()
-    
-    # Users Table
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'employee',
-            position TEXT DEFAULT 'Staff',
-            gender TEXT,
-            department TEXT
-        )
-    ''')
-    
-    # Responses Table
-    # Storing construct averages and final scores for easier analysis
-    # Saving raw answer string if needed, but for analytics, scores are better
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS responses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            job_stress_score REAL,
-            productivity_score REAL,
-            workload REAL,
-            role_ambiguity REAL,
-            job_security REAL,
-            gender_discrim REAL,
-            interpersonal REAL,
-            resources REAL,
-            satisfaction REAL,
-            support REAL,
-            raw_answers TEXT,
-            submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
-    
-    # Create Admin User if not exists
     try:
-        c.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')")
-    except:
-        pass
+        conn = get_db()
+        c = conn.cursor()
         
-    conn.commit()
-    conn.close()
+        # Users Table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'employee',
+                position TEXT DEFAULT 'Staff',
+                gender TEXT,
+                department TEXT
+            )
+        ''')
+        
+        # Responses Table
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS responses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                job_stress_score REAL,
+                productivity_score REAL,
+                workload REAL,
+                role_ambiguity REAL,
+                job_security REAL,
+                gender_discrim REAL,
+                interpersonal REAL,
+                resources REAL,
+                satisfaction REAL,
+                support REAL,
+                raw_answers TEXT,
+                submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        # Create Admin User if not exists
+        try:
+            c.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')")
+        except:
+            pass
+            
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Database initialization skipped (possibly read-only or exists): {e}")
 
     # Add raw_answers column if missing (for existing DBs)
-    conn = get_db()
-    cur = conn.cursor()
-    cols = [r[1] for r in cur.execute("PRAGMA table_info('responses')").fetchall()]
-    if 'raw_answers' not in cols:
-        try:
-            cur.execute("ALTER TABLE responses ADD COLUMN raw_answers TEXT")
-            conn.commit()
-        except Exception:
-            pass
-    # Ensure productivity construct columns exist for older DBs
-    prod_cols = {
-        'timings': 'REAL',
-        'supervisor': 'REAL',
-        'compensation': 'REAL',
-        'systems': 'REAL',
-        'problems': 'TEXT'
-    }
-    for col, coltype in prod_cols.items():
-        if col not in cols:
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cols = [r[1] for r in cur.execute("PRAGMA table_info('responses')").fetchall()]
+        if 'raw_answers' not in cols:
             try:
-                cur.execute(f"ALTER TABLE responses ADD COLUMN {col} {coltype}")
+                cur.execute("ALTER TABLE responses ADD COLUMN raw_answers TEXT")
                 conn.commit()
             except Exception:
                 pass
-    # Ensure users table has `position` column for older DBs
-    user_cols = [r[1] for r in cur.execute("PRAGMA table_info('users')").fetchall()]
-    if 'position' not in user_cols:
-        try:
-            cur.execute("ALTER TABLE users ADD COLUMN position TEXT DEFAULT 'Staff'")
-            conn.commit()
-        except Exception:
-            pass
-    conn.close()
+        # Ensure productivity construct columns exist for older DBs
+        prod_cols = {
+            'timings': 'REAL',
+            'supervisor': 'REAL',
+            'compensation': 'REAL',
+            'systems': 'REAL',
+            'problems': 'TEXT'
+        }
+        for col, coltype in prod_cols.items():
+            if col not in cols:
+                try:
+                    cur.execute(f"ALTER TABLE responses ADD COLUMN {col} {coltype}")
+                    conn.commit()
+                except Exception:
+                    pass
+        # Ensure users table has `position` column for older DBs
+        user_cols = [r[1] for r in cur.execute("PRAGMA table_info('users')").fetchall()]
+        if 'position' not in user_cols:
+            try:
+                cur.execute("ALTER TABLE users ADD COLUMN position TEXT DEFAULT 'Staff'")
+                conn.commit()
+            except Exception:
+                pass
+        conn.close()
+    except Exception as e:
+        print(f"Database update skipped (possibly read-only): {e}")
 
 init_db()
 
