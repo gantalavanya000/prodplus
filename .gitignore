@@ -5,7 +5,7 @@ __pycache__/
 .env
 .gemini/
 verify_logic.py
-database.db
+# database.db (Removed from ignore so it can be pushed to Vercel)
 # Ignore the database if you don't want to push it, 
 # but for Vercel demo, you might want to include it once 
 # so it has initial data. I will include it for now but note the persistence issue.

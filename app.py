@@ -217,7 +217,10 @@ def init_db():
     except Exception as e:
         print(f"Database update skipped (possibly read-only): {e}")
 
-# init_db() # Disabled for Vercel to avoid startup crashes
+try:
+    init_db()
+except Exception as e:
+    print(f"Startup DB init skipped: {e}")
 
 # Login Decorator
 def login_required(f):
