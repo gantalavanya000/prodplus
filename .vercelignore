@@ -1,0 +1,29 @@
+# Exclude large datasets
+*.csv
+*.xlsx
+SEM_JobStress_Productivity_*.csv
+
+# Exclude training scripts and environment
+training/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.gemini/
+.git/
+
+# Exclude verification scripts
+verify_logic.py
+check_dist.py
+check_accuracies.py
+cleanup_db.py
+rebalance_data.py
+import_dataset.py
+import_new_data.py
+view_db.py
+get_headers.py
+colab_run.ipynb
+cols.txt
+cols_list.txt
+training_output.txt
+threshold.txt
