@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Response Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <nav>
+        <div style="font-weight: bold; font-size: 1.2rem; color: white;">Response Details</div>
+        <div>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="title" style="color: white;">Submission by {{ res['username'] }}</h1>
+
+        <div class="content-card">
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:220px; padding:15px; background:#fff; border-radius:8px;">
+                    <strong>Date</strong>
+                    <div>{{ res['submission_date'] }}</div>
+                </div>
+                <div style="flex:1; min-width:220px; padding:15px; background:#fff; border-radius:8px;">
+                    <strong>Stress Score</strong>
+                    <div>{{ "%.2f"|format(res['job_stress_score']) }}</div>
+                    <small>Level: <strong>{{ stress_level }}</strong></small>
+                </div>
+                <div style="flex:1; min-width:220px; padding:15px; background:#fff; border-radius:8px;">
+                    <strong>Productivity Score</strong>
+                    <div>{{ "%.2f"|format(res['productivity_score']) }}</div>
+                </div>
+            </div>
+
+            {% if raw_answers and questions %}
+            {% set answer_map = {'1': 'Strongly Disagree', '2': 'Disagree', '3': 'Neutral', '4': 'Agree', '5': 'Strongly
+            Agree'} %}
+            <h3 style="margin-top:20px;">Questionnaire Answers</h3>
+            <div style="background:#f8f9fa; padding:20px; border-radius:8px; max-height: 600px; overflow-y: auto;">
+                {% set ns = namespace(counter=1) %}
+                {% for section, constructs in questions.items() %}
+                <h4
+                    style="color: #4e54c8; margin-top: {{ '0' if loop.first else '25px' }}; border-bottom: 2px solid #4e54c8; padding-bottom: 5px;">
+                    {{ section }}</h4>
+                {% for construct, items in constructs.items() %}
+                <div style="margin-top: 15px;">
+                    <div
+                        style="font-weight: bold; color: #2d3436; background: #e9ecef; padding: 5px 10px; border-radius: 4px;">
+                        {{ construct }}</div>
+                    <ul style="margin-top: 10px; list-style: none; padding-left: 0;">
+                        {% for item in items %}
+                        {% set ans_val = raw_answers.get('q' ~ ns.counter)|string %}
+                        <li
+                            style="margin-bottom: 12px; padding: 10px; border-left: 3px solid #4e54c8; background: white; border-radius: 0 4px 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <div style="font-size: 0.95rem; color: #2d3436;"><strong>Q{{ ns.counter }}.</strong> {{ item
+                                }}</div>
+                            <div style="margin-top: 8px; font-weight: 600; color: #4e54c8;">
+                                Answer: <span style="color: #d63031;">{{ ans_val }}</span>
+                                <span style="font-weight: normal; color: #636e72; margin-left: 10px;">({{
+                                    answer_map.get(ans_val, 'No Answer') }})</span>
+                            </div>
+                        </li>
+                        {% set ns.counter = ns.counter + 1 %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if res.problems %}
+            <div
+                style="margin-top: 25px; padding: 20px; background: #fff5f5; border-radius: 8px; border-left: 5px solid #ff7675;">
+                <h4 style="margin-top: 0; color: #d63031;">Reported Problems & Challenges</h4>
+                <p style="margin-bottom: 0; font-style: italic; color: #2d3436;">"{{ res.problems }}"</p>
+            </div>
+            {% endif %}
+
+            <div style="margin-top:20px;">
+                <a
+                    href="{{ url_for('admin_dashboard') if session.get('role')=='admin' else url_for('dashboard') }}"><button>Back</button></a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+Employee_ID
+Workload_TargetTime
+Workload_ExtraWork
+RoleAmbiguity_ClearInfo
+JobSecurity_Secure
+GenderDiscrimination_EqualGrowth
+Interpersonal_GoodRelations
+Resources_EnoughTime
+JobSatisfaction_WorkConditions
+OrgSupport_Training
+OrgSupport_CareerGrowth
+Productivity_TimeUtilization
+Supervisor_Motivation
+Supervisor_Communication
+Compensation_Salary
+Systems_QualityProcedures

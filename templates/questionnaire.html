@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionnaire - Job Stress Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <nav>
+        <div style="font-weight: bold; font-size: 1.2rem; color: white;">Job Stress Analysis</div>
+        <div>
+            <span style="color: white; margin-right: 15px;">Welcome, {{ session['username'] }}</span>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="title" style="color: white;">Assessment Questionnaire</h1>
+
+        <div class="content-card">
+            <p style="text-align: center; margin-bottom: 30px;">
+                Please answer the following questions honestly on a scale of 1 (Strongly Disagree) to 5 (Strongly
+                Agree).
+            </p>
+
+            <form method="POST">
+                {% set ns = namespace(counter=1) %}
+
+                <!-- Explicit Order Enforcement Logic is in app.py dict definition order, which is preserved in Python 3.7+ -->
+
+                <!-- JOB STRESS -->
+                <h2 style="color: #4e54c8; border-bottom: 2px solid #ccc; padding-bottom: 10px;">Job Stress Factors</h2>
+                {% for construct, items in questions['Job Stress'].items() %}
+                <div class="construct-section">
+                    <h3 class="construct-title">{{ construct }}</h3>
+                    {% for item in items %}
+                    <div class="question-item">
+                        <label style="font-weight: 600; display: block; margin-bottom: 10px;">Q{{ ns.counter }}. {{ item
+                            }}</label>
+                        <div class="likert-options">
+                            <label><input type="radio" name="q{{ ns.counter }}" value="1" required>Strongly
+                                Disagree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="2" required>Disagree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="3" required>Neutral</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="4" required>Agree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="5" required>Strongly
+                                Agree</label>
+                        </div>
+                    </div>
+                    {% set ns.counter = ns.counter + 1 %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <!-- PRODUCTIVITY -->
+                <h2 style="color: #4e54c8; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 40px;">
+                    Productivity Factors</h2>
+                {% for construct, items in questions['Productivity'].items() %}
+                <div class="construct-section">
+                    <h3 class="construct-title">{{ construct }}</h3>
+                    {% for item in items %}
+                    <div class="question-item">
+                        <label style="font-weight: 600; display: block; margin-bottom: 10px;">Q{{ ns.counter }}. {{ item
+                            }}</label>
+                        <div class="likert-options">
+                            <label><input type="radio" name="q{{ ns.counter }}" value="1" required>Strongly
+                                Disagree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="2" required>Disagree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="3" required>Neutral</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="4" required>Agree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="5" required>Strongly
+                                Agree</label>
+                        </div>
+                    </div>
+                    {% set ns.counter = ns.counter + 1 %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <div class="construct-section" style="margin-top: 40px;">
+                    <h3 class="construct-title" style="color: #4e54c8;">Challenges & Problems</h3>
+                    <div class="question-item">
+                        <label style="font-weight: 600; display: block; margin-bottom: 10px;">Do you have any problems
+                            or challenges to report regarding the work environment?</label>
+                        <textarea name="problems" rows="4"
+                            style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; resize: vertical;"
+                            placeholder="Describe your problems or challenges here..."></textarea>
+                    </div>
+                </div>
+
+                {% if role_questions %}
+                <h2 style="color: #4e54c8; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 40px;">
+                    Role-specific Questions</h2>
+                <div class="construct-section">
+                    <h3 class="construct-title">Questions for your role ({{ user_position }})</h3>
+                    {% for item in role_questions %}
+                    <div class="question-item">
+                        <label style="font-weight: 600; display: block; margin-bottom: 10px;">Q{{ ns.counter }}. {{ item
+                            }}</label>
+                        <div class="likert-options">
+                            <label><input type="radio" name="q{{ ns.counter }}" value="1" required>Strongly
+                                Disagree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="2" required>Disagree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="3" required>Neutral</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="4" required>Agree</label>
+                            <label><input type="radio" name="q{{ ns.counter }}" value="5" required>Strongly
+                                Agree</label>
+                        </div>
+                    </div>
+                    {% set ns.counter = ns.counter + 1 %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <button type="submit"
+                    style="font-size: 1.2rem; padding: 15px; width: 100%; background: #4e54c8; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px;">Submit
+                    Assessment</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

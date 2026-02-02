@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Job Stress Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body style="background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);">
+    <div class="container" style="max-width: 500px;">
+        <h1 class="title" style="color: #55efc4;">Admin Portal</h1>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="glass-card" style="border-color: rgba(85, 239, 196, 0.3);">
+            <h2 style="text-align: center; color: white;">Administrator Login</h2>
+            <form action="{{ url_for('admin_login') }}" method="POST">
+                <label style="color: white; margin-bottom: 5px; display: block;">Admin Username</label>
+                <input type="text" name="username" placeholder="Enter admin username" required>
+
+                <label style="color: white; margin-bottom: 5px; display: block;">Password</label>
+                <input type="password" name="password" placeholder="Enter password" required>
+
+                <button type="submit" style="background: linear-gradient(to right, #00b894, #00cec9);">Login to
+                    Dashboard</button>
+            </form>
+            <p style="text-align: center; margin-top: 15px; color: #ccc; font-size: 0.9rem;">
+                This portal is for authorized administrators only.
+            </p>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('login') }}" style="color: #ccc; text-decoration: none;">&larr; Back to Employee
+                Login</a>
+        </div>
+    </div>
+</body>
+
+</html>

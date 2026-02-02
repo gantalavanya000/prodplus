@@ -1,0 +1,11 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.gemini/
+verify_logic.py
+database.db
+# Ignore the database if you don't want to push it, 
+# but for Vercel demo, you might want to include it once 
+# so it has initial data. I will include it for now but note the persistence issue.

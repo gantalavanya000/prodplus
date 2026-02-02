@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Job Stress Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <nav>
+        <div style="font-weight: bold; font-size: 1.2rem; color: white;">Admin Panel</div>
+        <div>
+            <span style="color: white; margin-right: 15px;">Administrator</span>
+            <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="title" style="color: white;">System Overview</h1>
+
+        <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+            <div class="glass-card" style="flex: 1; text-align: center; color: white;">
+                <h3>Total Employees</h3>
+                <div style="font-size: 3rem;">{{ total_users }}</div>
+            </div>
+            <div class="glass-card" style="flex: 1; text-align: center; color: white;">
+                <h3>Assessments Completed</h3>
+                <div style="font-size: 3rem;">{{ total_responses }}</div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 style="text-align: center;">Model Performance Accuracies</h2>
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
+                {% for model, acc in accuracies.items() %}
+                <div class="glass-card"
+                    style="padding: 15px; text-align: center; border: 1px solid #4e54c8; min-width: 200px;">
+                    <div style="font-size: 0.9rem; color: #4e54c8;">{{ model }}</div>
+                    <div style="font-size: 1.8rem; font-weight: bold;">{{ (acc * 100)|round(1) }}%</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h2 style="text-align: center; margin-top: 40px;">Analytics</h2>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 40px; justify-content: center;">
+                <div style="flex: 1; min-width: 400px;">
+                    <canvas id="scatterChart"></canvas>
+                    <p style="text-align: center; font-size: 0.9rem; margin-top: 10px;">Job Stress (X) vs Productivity
+                        (Y)</p>
+                </div>
+                <div style="flex: 1; min-width: 400px;">
+                    <canvas id="barChart"></canvas>
+                    <p style="text-align: center; font-size: 0.9rem; margin-top: 10px;">Average Productivity by
+                        Department</p>
+                </div>
+            </div>
+
+            <h2 style="text-align: center; margin-top: 40px;">Stress vs Productivity Trend</h2>
+            <div style="max-width: 800px; margin: 0 auto;">
+                <canvas id="trendChart"></canvas>
+            </div>
+
+            <h2 style="text-align: center; margin-top: 40px;">Ideal Set (Benchmark Performance)</h2>
+            <p style="text-align: center; color: #636e72;">Benchmark values from the dataset (5,000 records) for
+                high-performing, low-stress profiles.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 20px;">
+                {% for key, val in ideal_set.items() %}
+                <div class="glass-card"
+                    style="padding: 10px 20px; text-align: center; border: 1px solid #55efc4; min-width: 150px;">
+                    <div style="font-size: 0.8rem; color: #00b894;">{{ key }}</div>
+                    <div style="font-size: 1.4rem; font-weight: bold; color: #2d3436;">{{ val }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h2 style="text-align: center; margin-top: 40px;">Recent Responses</h2>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background: #4e54c8; color: white;">
+                            <th style="padding: 12px; border: 1px solid #ddd;">Username</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Gender</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Department</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Stress Score</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Stress Level</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Productivity Score</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Date</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in recent_responses %}
+                        <tr id="row-{{ res['response_id'] }}"
+                            style="text-align: center; border-bottom: 1px solid #eee;">
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['username'] }}</td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['gender'] }}</td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['department'] }}</td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['job_stress_score']|round(2) }}
+                            </td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['stress_level'] }}</td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['productivity_score']|round(2) }}
+                            </td>
+                            <td style="padding: 12px; border: 1px solid #ddd;">{{ res['submission_date'] }}</td>
+                            <td style="padding: 12px; border: 1px solid #ddd;"><a href="#"
+                                    onclick="toggleAnswers({{ res['response_id'] }}); return false;">View</a></td>
+                        </tr>
+                        <tr id="answers-{{ res['response_id'] }}" class="answers-row"
+                            style="display:none; background:#fafafa;">
+                            <td colspan="8" style="padding:12px; border:1px solid #eee; text-align:left;">
+                                {% if res.raw_answers and questions %}
+                                {% set answer_map = {'5': 'Strongly Disagree', '4': 'Disagree', '3': 'Neutral', '2':
+                                'Agree', '1': 'Strongly Agree'} %}
+                                <div
+                                    style="margin-top:8px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                                    <strong>Full Questionnaire Answers:</strong>
+                                    <div style="margin-top: 10px; max-height: 400px; overflow-y: auto;">
+                                        {% set ns = namespace(counter=1) %}
+                                        {% for section, constructs in questions.items() %}
+                                        <div
+                                            style="font-weight: bold; color: #4e54c8; margin-top: 10px; border-bottom: 1px solid #4e54c8;">
+                                            {{ section }}</div>
+                                        {% for construct, items in constructs.items() %}
+                                        <div style="margin-left: 10px; margin-top: 5px;">
+                                            <em style="color: #636e72;">{{ construct }}</em>
+                                            <ul style="margin: 5px 0; padding-left: 20px; list-style-type: circle;">
+                                                {% for item in items %}
+                                                {% set ans_val = res.raw_answers.get('q' ~ ns.counter)|string %}
+                                                <li style="margin-bottom: 5px;">
+                                                    <span style="font-size: 0.9rem;">Q{{ ns.counter }}. {{ item
+                                                        }}</span>
+                                                    <span
+                                                        style="font-weight: bold; color: #d63031; margin-left: 5px;">{{
+                                                        ans_val }}</span>
+                                                    <small style="color: #636e72;">({{ answer_map.get(ans_val, 'N/A')
+                                                        }})</small>
+                                                </li>
+                                                {% set ns.counter = ns.counter + 1 %}
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if res.problems %}
+                                <div
+                                    style="margin-top: 12px; padding: 10px; background: #fff5f5; border-radius: 6px; border-left: 4px solid #ff7675;">
+                                    <strong>Reported Problems:</strong>
+                                    <div style="margin-top: 5px; font-style: italic; color: #2d3436;">"{{ res.problems
+                                        }}"</div>
+                                </div>
+                                {% endif %}
+                                {% if res.constructs %}
+                                <div style="margin-top:8px;">
+                                    <strong>Construct Values:</strong>
+                                    <ul style="margin:6px 0 0 18px;">
+                                        {% for ck, cv in res.constructs.items() %}
+                                        <li><strong>{{ ck }}:</strong> {{ "%.2f"|format(cv) }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Data from Flask
+        const stressData = {{ stress_data | tojson }};
+        const prodData = {{ prod_data | tojson }};
+        const depts = {{ depts | tojson }};
+        const deptScores = {{ dept_scores | tojson }};
+        const trendLabels = {{ trend_labels | tojson }};
+        const trendValues = {{ trend_values | tojson }};
+
+        // Scatter Chart (Stress vs Productivity)
+        const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+        const scatterData = stressData.map((s, i) => ({ x: s, y: prodData[i] }));
+
+        new Chart(scatterCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Employee Responses',
+                    data: scatterData,
+                    backgroundColor: 'rgba(78, 84, 200, 0.6)'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'linear', position: 'bottom', title: { display: true, text: 'Job Stress Score' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Productivity Score' }
+                    }
+                }
+            }
+        });
+
+        // Bar Chart (Department Productivity)
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: depts,
+                datasets: [{
+                    label: 'Avg Productivity',
+                    data: deptScores,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, max: 5 }
+                }
+            }
+        });
+
+        // Trend Chart (Stress vs Productivity Trend)
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'Avg Productivity',
+                    data: trendValues,
+                    borderColor: '#ff7675',
+                    backgroundColor: 'rgba(255, 118, 117, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Stress Level (Buckets)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        title: { display: true, text: 'Avg Productivity Score' }
+                    }
+                }
+            }
+        });
+
+        function toggleAnswers(id) {
+            const row = document.getElementById('answers-' + id);
+            if (!row) return;
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+            // Scroll into view when opening
+            if (row.style.display !== 'none') row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+
+</html>
