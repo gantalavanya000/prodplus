@@ -139,6 +139,17 @@ ROLE_QUESTIONS = {
     ]
 }
 
+STRESS_INSIGHTS = {
+    "Workload": "Prioritize tasks using the Eisenhower Matrix and discuss realistic deadlines with your supervisor.",
+    "Role Ambiguity": "Schedule a meeting with your manager to clarify your key responsibilities and performance expectations.",
+    "Job Security": "Focus on upskilling and document your achievements to build confidence and value within the organization.",
+    "Gender Discrimination": "Seek support from HR or a mentor, and familiarize yourself with company policies on diversity and inclusion.",
+    "Interpersonal Relationships": "Engage in open communication with colleagues and consider conflict resolution training if needed.",
+    "Resource Constraints": "Communicate equipment or time needs clearly to management and explore efficiency tools.",
+    "Job Satisfaction": "Identify specific aspects of your job that you enjoy and explore ways to incorporate more of those into your daily routine.",
+    "Organizational Support": "Utilize available company resources like EAPs (Employee Assistance Programs) or training workshops."
+}
+
 # Database Helper
 def get_db():
     try:
@@ -303,8 +314,27 @@ def view_response(response_id):
         raw_answers = {}
 
     stress_level = _stress_label(row['job_stress_score'])
+    
+    insights = []
+    if stress_level == 'High':
+        # Get the top 3 contributing factors
+        factors = [
+            ("Workload", row['workload']),
+            ("Role Ambiguity", row['role_ambiguity']),
+            ("Job Security", row['job_security']),
+            ("Gender Discrimination", row['gender_discrim']),
+            ("Interpersonal Relationships", row['interpersonal']),
+            ("Resource Constraints", row['resources']),
+            ("Job Satisfaction", row['satisfaction']),
+            ("Organizational Support", row['support'])
+        ]
+        # Sort factors by score (higher score = more stress)
+        sorted_factors = sorted([f for f in factors if f[1] is not None], key=lambda x: x[1], reverse=True)
+        for factor, score in sorted_factors[:3]:
+            if score > 3: # Suggest if the factor itself is high
+                insights.append(STRESS_INSIGHTS.get(factor, ""))
 
-    return render_template('response_detail.html', res=row, raw_answers=raw_answers, stress_level=stress_level, questions=QUESTIONS)
+    return render_template('response_detail.html', res=row, raw_answers=raw_answers, stress_level=stress_level, questions=QUESTIONS, insights=insights)
 
 @app.route('/health')
 def health():
@@ -639,7 +669,26 @@ def dashboard():
             # Standard classification: High Prod = High Prod
             predictions['classification'] = "High Productivity" if pred_class == 1 else "Low Productivity"
             
-    return render_template('dashboard.html', result=res, predictions=predictions)
+    insights = []
+    if res and _stress_label(res['job_stress_score']) == 'High':
+        # Get the top 3 contributing factors
+        factors = [
+            ("Workload", res['workload']),
+            ("Role Ambiguity", res['role_ambiguity']),
+            ("Job Security", res['job_security']),
+            ("Gender Discrimination", res['gender_discrim']),
+            ("Interpersonal Relationships", res['interpersonal']),
+            ("Resource Constraints", res['resources']),
+            ("Job Satisfaction", res['satisfaction']),
+            ("Organizational Support", res['support'])
+        ]
+        # Sort factors by score (higher score = more stress)
+        sorted_factors = sorted([f for f in factors if f[1] is not None], key=lambda x: x[1], reverse=True)
+        for factor, score in sorted_factors[:3]:
+            if score > 3:
+                insights.append(STRESS_INSIGHTS.get(factor, ""))
+            
+    return render_template('dashboard.html', result=res, predictions=predictions, insights=insights)
 
 @app.route('/admin')
 @admin_required

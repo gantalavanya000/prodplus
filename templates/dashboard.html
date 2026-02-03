@@ -87,31 +87,30 @@
                     {% endif %}
                 </div>
 
-                <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #dfe6e9;">
-                    <p style="font-style: italic; color: #636e72; font-size: 0.9rem;">
-                        Overall Status:
-                        {% if result.job_stress_score < 2 %} <strong>Low Stress</strong>
-                            {% elif result.job_stress_score <= 3 %} <strong>Medium Stress</strong>
-                                {% else %} <strong>High Stress</strong> {% endif %}
-                                expected to yield
-                                {% if result.productivity_score < 2 %} <strong>Low Productivity</strong>
-                                    {% elif result.productivity_score <= 3 %} <strong>Good Productivity</strong>
-                                        {% else %} <strong>Excellent Productivity</strong> {% endif %}.
-                    </p>
-                    <div style="margin-top:10px;">
-                        <a href="{{ url_for('view_response', response_id=result['id']) }}"><button
-                                style="padding:8px 12px;">View Answers</button></a>
-                    </div>
+                <p style="font-style: italic; color: #636e72; font-size: 0.9rem;">
+                    Overall Status:
+                    {% if result.job_stress_score < 2 %} <strong>Low Stress</strong>
+                        {% elif result.job_stress_score <= 3 %} <strong>Medium Stress</strong>
+                            {% else %} <strong>High Stress</strong> {% endif %}
+                            expected to yield
+                            {% if result.productivity_score < 2 %} <strong>Low Productivity</strong>
+                                {% elif result.productivity_score <= 3 %} <strong>Good Productivity</strong>
+                                    {% else %} <strong>Excellent Productivity</strong> {% endif %}.
+                </p>
+                <div style="margin-top:10px;">
+                    <a href="{{ url_for('view_response', response_id=result['id']) }}"><button
+                            style="padding:8px 12px;">View Answers</button></a>
                 </div>
             </div>
-            {% else %}
-            <p style="text-align: center;">You have not submitted an assessment yet.</p>
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="{{ url_for('questionnaire') }}"><button style="max-width: 300px;">Start
-                        Questionnaire</button></a>
-            </div>
-            {% endif %}
         </div>
+        {% else %}
+        <p style="text-align: center;">You have not submitted an assessment yet.</p>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('questionnaire') }}"><button style="max-width: 300px;">Start
+                    Questionnaire</button></a>
+        </div>
+        {% endif %}
+    </div>
     </div>
 </body>
 
